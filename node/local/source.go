@@ -9,18 +9,15 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp/params"
-
 	"github.com/cosmos/cosmos-sdk/store"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/forbole/juno/v4/node"
 	"github.com/spf13/viper"
 	cfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/libs/log"
 	tmnode "github.com/tendermint/tendermint/node"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmstore "github.com/tendermint/tendermint/store"
 	db "github.com/tendermint/tm-db"
-
-	"github.com/forbole/juno/v4/node"
 )
 
 var (
@@ -43,7 +40,7 @@ type Source struct {
 
 // NewSource returns a new Source instance
 func NewSource(home string, encodingConfig *params.EncodingConfig) (*Source, error) {
-	levelDB, err := sdk.NewLevelDB("application", path.Join(home, "data"))
+	levelDB, err := db.NewGoLevelDB("application", path.Join(home, "data"))
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +58,7 @@ func NewSource(home string, encodingConfig *params.EncodingConfig) (*Source, err
 	return &Source{
 		StoreDB: levelDB,
 
-		Codec:       encodingConfig.Marshaler,
+		Codec:       encodingConfig.Codec,
 		LegacyAmino: encodingConfig.Amino,
 
 		BlockStore: tmstore.NewBlockStore(blockStoreDB),
@@ -155,22 +152,22 @@ func (k Source) InitStores() error {
 	return k.Cms.LoadLatestVersion()
 }
 
-// LoadHeight loads the given height from the store.
-// It returns a new Context that can be used to query the data, or an error if something wrong happens.
-func (k Source) LoadHeight(height int64) (sdk.Context, error) {
-	var err error
-	var cms sdk.CacheMultiStore
-	if height > 0 {
-		cms, err = k.Cms.CacheMultiStoreWithVersion(height)
-		if err != nil {
-			return sdk.Context{}, err
-		}
-	} else {
-		cms, err = k.Cms.CacheMultiStoreWithVersion(k.BlockStore.Height())
-		if err != nil {
-			return sdk.Context{}, err
-		}
-	}
-
-	return sdk.NewContext(cms, tmproto.Header{}, false, k.Logger), nil
-}
+//// LoadHeight loads the given height from the store.
+//// It returns a new Context that can be used to query the data, or an error if something wrong happens.
+//func (k Source) LoadHeight(height int64) (sdk.Context, error) {
+//	var err error
+//	var cms sdk.CacheMultiStore
+//	if height > 0 {
+//		cms, err = k.Cms.CacheMultiStoreWithVersion(height)
+//		if err != nil {
+//			return sdk.Context{}, err
+//		}
+//	} else {
+//		cms, err = k.Cms.CacheMultiStoreWithVersion(k.BlockStore.Height())
+//		if err != nil {
+//			return sdk.Context{}, err
+//		}
+//	}
+//
+//	return sdk.NewContext(cms, tmproto.Header{}, false, k.Logger), nil
+//}
